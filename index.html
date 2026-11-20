@@ -1,0 +1,985 @@
+<!DOCTYPE html>
+<html lang="ckb" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KurdBite | داواکردنی خواردنی خێرا و بەتام</title>
+    
+    <!-- Google Fonts: Vazirmatn & Noto Sans Arabic + Plus Jakarta Sans -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Arabic:wght@400;600;700&family=Plus+Jakarta+Sans:wght@600;700;800&family=Vazirmatn:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Vazirmatn', 'Noto Sans Arabic', 'sans-serif'],
+                        en: ['Plus Jakarta Sans', 'sans-serif'],
+                    },
+                    colors: {
+                        brand: {
+                            orange: '#F97316',
+                            orangeDark: '#EA580C',
+                            amber: '#F59E0B',
+                            dark: '#111827',
+                            surface: '#1F2937'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        body {
+            background-color: #0F1117;
+            color: #F9FAFB;
+            font-family: 'Vazirmatn', 'Noto Sans Arabic', sans-serif;
+            overflow-x: hidden;
+        }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        .food-card {
+            transition: transform 0.25s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.25s ease;
+        }
+        .food-card:hover {
+            transform: translateY(-5px);
+        }
+    </style>
+</head>
+<body class="antialiased selection:bg-orange-500 selection:text-white">
+
+    <!-- ==================== STICKY NAVBAR ==================== -->
+    <header class="sticky top-0 z-40 bg-[#0F1117]/90 backdrop-blur-xl border-b border-white/10">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 sm:h-20 flex items-center justify-between gap-3">
+            
+            <!-- Brand Logo & City Selector -->
+            <div class="flex items-center gap-4 sm:gap-6">
+                <a href="#" onclick="resetMenu(); return false;" class="flex items-center gap-2.5">
+                    <div class="w-10 h-10 rounded-2xl bg-gradient-to-tr from-orange-600 to-amber-400 flex items-center justify-center shadow-lg shadow-orange-500/30">
+                        <i data-lucide="utensils" class="w-5 h-5 text-white"></i>
+                    </div>
+                    <div>
+                        <span class="font-en font-extrabold text-xl sm:text-2xl text-white tracking-tight">Kurd<span class="text-orange-500">Bite</span></span>
+                        <span class="hidden sm:block text-[10px] text-gray-400 -mt-1">گەیاندنی خێرا لە ٣٠ خولەکدا</span>
+                    </div>
+                </a>
+
+                <!-- Delivery Location Pill -->
+                <div class="hidden md:flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white/5 border border-white/10 text-xs text-gray-200">
+                    <i data-lucide="map-pin" class="w-3.5 h-3.5 text-orange-400"></i>
+                    <span>کەرکوک / هەولێر / سلێمانی</span>
+                </div>
+            </div>
+
+            <!-- Search Input & Cart Trigger -->
+            <div class="flex items-center gap-2 sm:gap-3">
+                <div class="relative">
+                    <i data-lucide="search" class="w-4 h-4 text-gray-400 absolute right-3.5 top-1/2 -translate-y-1/2 pointer-events-none"></i>
+                    <input 
+                        type="text" 
+                        id="search-input" 
+                        placeholder="گەڕان بۆ پیتزا، کەباب، بەرگر..." 
+                        class="w-32 sm:w-52 lg:w-64 bg-white/10 hover:bg-white/15 focus:bg-gray-900 text-xs sm:text-sm text-white placeholder-gray-400 rounded-full py-2.5 pr-10 pl-4 border border-white/10 focus:border-orange-500 focus:outline-none transition"
+                    >
+                </div>
+
+                <!-- Restaurant Kitchen Panel Button -->
+                <button onclick="toggleRestaurantPanel(true)" class="relative flex items-center gap-1.5 px-3.5 py-2.5 rounded-full bg-white/10 hover:bg-white/20 border border-white/15 text-white font-bold text-xs sm:text-sm transition active:scale-95">
+                    <i data-lucide="chef-hat" class="w-4 h-4 text-amber-400"></i>
+                    <span class="hidden md:inline">پانێڵی مەتحەم</span>
+                    <span id="kitchen-orders-badge" class="px-1.5 py-0.5 text-[10px] font-extrabold bg-emerald-500 text-black rounded-full">0</span>
+                </button>
+
+                <!-- Cart Drawer Button with Live Price -->
+                <button onclick="toggleCartDrawer(true)" class="relative flex items-center gap-2 px-3.5 sm:px-4 py-2.5 rounded-full bg-gradient-to-r from-orange-600 to-amber-500 hover:from-orange-500 hover:to-amber-400 text-white font-bold text-xs sm:text-sm shadow-lg shadow-orange-600/30 transition active:scale-95">
+                    <i data-lucide="shopping-bag" class="w-4 h-4"></i>
+                    <span class="hidden sm:inline">سەبەتەکەم</span>
+                    <span id="cart-badge" class="px-2 py-0.5 text-[11px] font-extrabold bg-black/30 rounded-full">0</span>
+                    <span id="navbar-live-total" class="hidden lg:inline-block border-r border-white/30 pr-2 text-xs font-extrabold">0 د.ع</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- ==================== HERO PROMO BANNER ==================== -->
+    <section class="relative overflow-hidden border-b border-white/10">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12 grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
+            
+            <!-- Left/Right Copy -->
+            <div class="lg:col-span-7 space-y-4 sm:space-y-5">
+                <div class="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-orange-500/15 border border-orange-500/30 text-orange-300 text-xs font-bold">
+                    <span class="w-2 h-2 rounded-full bg-orange-500 animate-ping"></span>
+                    <span>داشکاندنی ٢٥٪ بۆ یەکەمین داواکاری ئەمڕۆ!</span>
+                </div>
+
+                <h1 class="text-3xl sm:text-5xl font-black text-white leading-tight">
+                    خۆشترین خواردنە کوردی و جیهانییەکان <span class="text-transparent bg-clip-text bg-gradient-to-r from-orange-400 to-amber-300">بە گەرمی لەبەر دەرگاتن</span>
+                </h1>
+
+                <p class="text-sm sm:text-base text-gray-300 max-w-xl leading-relaxed">
+                    لە کەباب و دۆڵمەی کوردەوارییەوە تا پیتزای ئیتاڵی و بەرگری تایبەت — بە خێراترین کات و باشترین کوالێتی داوای بکە.
+                </p>
+
+                <div class="pt-1 flex flex-wrap items-center gap-3">
+                    <a href="#menu-section" class="px-6 py-3 rounded-2xl bg-orange-600 hover:bg-orange-500 text-white font-bold text-sm flex items-center gap-2 shadow-lg shadow-orange-600/30 transition">
+                        <span>سەیرکردنی مێنوو</span>
+                        <i data-lucide="arrow-down" class="w-4 h-4"></i>
+                    </a>
+                    <div class="flex items-center gap-4 px-4 py-2.5 rounded-2xl bg-white/5 border border-white/10 text-xs text-gray-300">
+                        <span class="flex items-center gap-1 text-amber-400 font-bold"><i data-lucide="star" class="w-4 h-4 fill-amber-400"></i> 4.9</span>
+                        <span>•</span>
+                        <span>گەیاندن: 25-35 خولەک</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Hero Featured Dish Showcase Card -->
+            <div class="lg:col-span-5">
+                <div class="relative rounded-3xl overflow-hidden border border-white/15 bg-gray-900 shadow-2xl group">
+                    <img src="https://images.unsplash.com/photo-1555939594-58d7cb561ad1?auto=format&fit=crop&w=900&q=85" 
+                         alt="کەباب و برژاوی تایبەت" 
+                         onerror="this.src='https://placehold.co/800x520/1F2937/F97316?text=KurdBite+Special'"
+                         class="w-full h-64 sm:h-72 object-cover group-hover:scale-105 transition duration-500">
+                    <div class="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-transparent"></div>
+                    <div class="absolute bottom-4 inset-x-4 flex items-end justify-between gap-3">
+                        <div>
+                            <span class="px-2.5 py-0.5 rounded bg-orange-500 text-white text-[11px] font-bold">پڕفرۆشترین ژەم</span>
+                            <h3 class="text-lg font-extrabold text-white mt-1">سینی برژاوی تێکەڵی شاهانە</h3>
+                            <p class="text-xs text-gray-300">کەباب، تکە، باڵی برژاو + نان و زەڵاتەی تازە</p>
+                        </div>
+                        <button onclick="addToCart(1)" class="px-4 py-2.5 rounded-xl bg-white text-gray-950 hover:bg-orange-500 hover:text-white font-extrabold text-xs transition shadow-lg flex-shrink-0">
+                            + 14,000 د.ع
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </section>
+
+    <!-- ==================== MENU & CATEGORIES SECTION ==================== -->
+    <main id="menu-section" class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12 space-y-8">
+
+        <!-- Category Filter Pills & Sort -->
+        <div class="flex flex-wrap items-center justify-between gap-4">
+            <div class="flex items-center gap-2 overflow-x-auto no-scrollbar pb-1" id="category-tabs">
+                <button onclick="setCategory('all')" data-cat="all" class="cat-btn whitespace-nowrap px-4 py-2 rounded-full text-xs sm:text-sm font-bold bg-orange-600 text-white shadow-md transition">
+                    🍽️ هەموو خواردنەکان
+                </button>
+                <button onclick="setCategory('kurdish')" data-cat="kurdish" class="cat-btn whitespace-nowrap px-4 py-2 rounded-full text-xs sm:text-sm font-semibold bg-white/10 hover:bg-white/15 text-gray-200 transition">
+                    🔥 خواردنی کوردی و برژاو
+                </button>
+                <button onclick="setCategory('pizza')" data-cat="pizza" class="cat-btn whitespace-nowrap px-4 py-2 rounded-full text-xs sm:text-sm font-semibold bg-white/10 hover:bg-white/15 text-gray-200 transition">
+                    🍕 پیتزا
+                </button>
+                <button onclick="setCategory('burger')" data-cat="burger" class="cat-btn whitespace-nowrap px-4 py-2 rounded-full text-xs sm:text-sm font-semibold bg-white/10 hover:bg-white/15 text-gray-200 transition">
+                    🍔 بەرگر و فاست فوود
+                </button>
+                <button onclick="setCategory('dessert')" data-cat="dessert" class="cat-btn whitespace-nowrap px-4 py-2 rounded-full text-xs sm:text-sm font-semibold bg-white/10 hover:bg-white/15 text-gray-200 transition">
+                    🍰 شیرینی و خواردنەوە
+                </button>
+            </div>
+
+            <div class="text-xs text-gray-400">
+                پیشاندانی <span id="items-count" class="text-white font-bold">0</span> ژەم
+            </div>
+        </div>
+
+        <!-- Food Menu Grid -->
+        <div id="menu-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5 sm:gap-6">
+            <!-- Food cards injected via JS -->
+        </div>
+
+    </main>
+
+    <!-- ==================== FOOTER ==================== -->
+    <footer class="border-t border-white/10 bg-[#0A0C10] py-8 mt-12">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-gray-400">
+            <div class="flex items-center gap-2">
+                <span class="font-en font-extrabold text-base text-white">Kurd<span class="text-orange-500">Bite</span></span>
+                <span>• خزمەتگوزاری داواکردنی خواردن</span>
+            </div>
+            <p>© 2026 KurdBite Delivery. هەموو مافەکان پارێزراون.</p>
+        </div>
+    </footer>
+
+    <!-- ==================== SHOPPING CART DRAWER ==================== -->
+    <div id="cart-drawer" class="fixed inset-0 z-50 hidden">
+        <div onclick="toggleCartDrawer(false)" class="absolute inset-0 bg-black/75 backdrop-blur-sm"></div>
+        <div class="absolute top-0 bottom-0 left-0 w-full max-w-md bg-[#161922] border-r border-white/10 shadow-2xl flex flex-col z-10">
+            
+            <!-- Drawer Header -->
+            <div class="p-5 border-b border-white/10 flex items-center justify-between">
+                <div class="flex items-center gap-2.5">
+                    <i data-lucide="shopping-bag" class="w-5 h-5 text-orange-500"></i>
+                    <h3 class="text-lg font-extrabold text-white">سەبەتەی داواکاری</h3>
+                </div>
+                <button onclick="toggleCartDrawer(false)" class="p-2 rounded-xl bg-white/5 hover:bg-white/15 text-gray-300 transition">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+
+            <!-- Cart Items List -->
+            <div id="cart-items-container" class="flex-1 overflow-y-auto p-5 space-y-3">
+                <!-- Populated dynamically -->
+            </div>
+
+            <!-- Checkout Summary & Form -->
+            <div id="cart-footer" class="p-5 border-t border-white/10 bg-[#11131A] space-y-4">
+                <!-- Promo Code Input -->
+                <div class="flex items-center gap-2">
+                    <input type="text" id="promo-input" placeholder="کۆدی داشکاندن (نموونە: KURD25)" class="flex-1 bg-white/5 border border-white/10 rounded-xl px-3.5 py-2 text-xs text-white placeholder-gray-500 focus:border-orange-500 focus:outline-none">
+                    <button onclick="applyPromoCode()" class="px-3.5 py-2 rounded-xl bg-white/10 hover:bg-white/20 text-xs font-bold text-orange-400 transition">جێبەجێکردن</button>
+                </div>
+
+                <!-- Totals -->
+                <div class="space-y-1.5 text-xs sm:text-sm">
+                    <div class="flex justify-between text-gray-400">
+                        <span>کۆی خواردنەکان:</span>
+                        <span id="subtotal-price" class="font-bold text-white">0 د.ع</span>
+                    </div>
+                    <div class="flex justify-between text-gray-400">
+                        <span>کرێی گەیاندن:</span>
+                        <span id="delivery-fee" class="font-bold text-emerald-400">2,000 د.ع</span>
+                    </div>
+                    <div id="discount-row" class="hidden flex justify-between text-orange-400">
+                        <span>داشکاندن (٢٥٪):</span>
+                        <span id="discount-amount" class="font-bold">-0 د.ع</span>
+                    </div>
+                    <div class="flex justify-between text-base font-black text-white pt-2 border-t border-white/10">
+                        <span>کۆی گشتی:</span>
+                        <span id="total-price" class="text-orange-400">0 د.ع</span>
+                    </div>
+                </div>
+
+                <button onclick="openCheckoutModal()" class="w-full py-3.5 rounded-2xl bg-gradient-to-r from-orange-600 to-amber-500 hover:from-orange-500 hover:to-amber-400 text-white font-extrabold text-sm shadow-lg shadow-orange-600/30 transition active:scale-95">
+                    تەواوکردنی داواکاری (Checkout)
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== CHECKOUT & LIVE ORDER TRACKING MODAL ==================== -->
+    <div id="checkout-modal" class="fixed inset-0 z-50 hidden items-center justify-center p-4">
+        <div onclick="closeCheckoutModal()" class="fixed inset-0 bg-black/80 backdrop-blur-md"></div>
+        <div id="checkout-modal-body" class="relative z-10 w-full max-w-lg rounded-3xl bg-[#161922] border border-white/15 p-6 shadow-2xl space-y-5">
+            <!-- Populated via JS -->
+        </div>
+    </div>
+
+    <!-- ==================== RESTAURANT KITCHEN ORDERS MODAL (پانێڵی مەتحەم) ==================== -->
+    <div id="restaurant-modal" class="fixed inset-0 z-50 hidden items-center justify-center p-3 sm:p-5 overflow-y-auto">
+        <div onclick="toggleRestaurantPanel(false)" class="fixed inset-0 bg-black/85 backdrop-blur-md"></div>
+        <div class="relative z-10 w-full max-w-4xl my-auto max-h-[90vh] flex flex-col rounded-3xl bg-[#141720] border border-white/15 shadow-2xl overflow-hidden">
+            
+            <!-- Restaurant Header -->
+            <div class="px-5 sm:px-6 py-4 bg-[#0F1117] border-b border-white/10 flex items-center justify-between gap-3">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-2xl bg-amber-500/20 border border-amber-500/40 flex items-center justify-center text-amber-400">
+                        <i data-lucide="chef-hat" class="w-6 h-6"></i>
+                    </div>
+                    <div>
+                        <div class="flex items-center gap-2">
+                            <h3 class="text-base sm:text-xl font-black text-white">شاشەی داواکارییەکانی مەتحەم (KurdBite Kitchen)</h3>
+                            <span class="px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 text-[10px] font-bold flex items-center gap-1">
+                                <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping"></span>
+                                ئۆنلاین
+                            </span>
+                        </div>
+                        <p class="text-xs text-gray-400">هەموو داواکارییە نێردراوەکانی کڕیاران ڕاستەوخۆ لێرە دەردەکەون</p>
+                    </div>
+                </div>
+                <button onclick="toggleRestaurantPanel(false)" class="p-2 rounded-xl bg-white/10 hover:bg-rose-600 text-white transition">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+
+            <!-- Orders List Container -->
+            <div id="restaurant-orders-list" class="p-5 sm:p-6 overflow-y-auto space-y-4 flex-1">
+                <!-- Populated dynamically when customer sends orders -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="fixed bottom-5 right-5 z-50 transform translate-y-20 opacity-0 pointer-events-none transition-all duration-300 bg-gray-900 border border-orange-500/40 text-white px-4 py-3 rounded-2xl shadow-2xl text-xs font-bold flex items-center gap-2.5">
+        <span class="w-2.5 h-2.5 rounded-full bg-orange-500"></span>
+        <span id="toast-msg">زیادکرا بۆ سەبەتەکەت</span>
+    </div>
+
+    <script>
+        // ==================== FOOD MENU CATALOG ====================
+        const foodMenu = [
+            {
+                id: 1,
+                name: "سینی برژاوی تێکەڵی شاهانە",
+                enName: "Royal Mixed Grill Platter",
+                category: "kurdish",
+                price: 14000,
+                rating: "4.9",
+                prepTime: "25 خولەک",
+                calories: "820 kcal",
+                badge: "پڕفرۆشترین",
+                image: "https://images.unsplash.com/photo-1555939594-58d7cb561ad1?auto=format&fit=crop&w=700&q=85",
+                desc: "کەبابی بەرخ، تکەی گۆشت، باڵی مریشکی برژاو لەگەڵ نانی گەرم، تەماتەی برژاو و زەڵاتە."
+            },
+            {
+                id: 2,
+                name: "دۆڵمەی کوردەواری تایبەت",
+                enName: "Traditional Kurdish Dolma",
+                category: "kurdish",
+                price: 10000,
+                rating: "4.9",
+                prepTime: "20 خولەک",
+                calories: "640 kcal",
+                badge: "خواردنی ماڵەوە",
+                image: "https://images.unsplash.com/photo-1541518763669-27fef04b14ea?auto=format&fit=crop&w=700&q=85",
+                desc: "گەڵامێو، باینجان، پیاز و بیبەری پڕکراو بە برنج و گۆشتی وردکراو لەگەڵ پەراسوو."
+            },
+            {
+                id: 3,
+                name: "پیتزای پێپێرۆنی و پەنیر",
+                enName: "Double Pepperoni Pizza",
+                category: "pizza",
+                price: 12000,
+                rating: "4.8",
+                prepTime: "22 خولەک",
+                calories: "910 kcal",
+                badge: "نوێ",
+                image: "https://images.unsplash.com/photo-1628840042765-356cda07504e?auto=format&fit=crop&w=700&q=85",
+                desc: "هەویری تازەی ئیتاڵی، سۆسی تەماتەی سروشتی، پەنیری مۆزارێلای تواوە و پێپێرۆنی."
+            },
+            {
+                id: 4,
+                name: "دەبڵ چیس بەرگری کوردبایت",
+                enName: "Double Smash Cheeseburger",
+                category: "burger",
+                price: 8500,
+                rating: "4.8",
+                prepTime: "18 خولەک",
+                calories: "780 kcal",
+                badge: "تایبەت",
+                image: "https://images.unsplash.com/photo-1568901346375-23c9450c58cd?auto=format&fit=crop&w=700&q=85",
+                desc: "دوو پارچە گۆشتی تازەی برژاو، پەنیری چێدار، سۆسی تایبەت و پەتاتەی سوورکراوە."
+            },
+            {
+                id: 5,
+                name: "قۆزی بەرخ بە برنجی زعفران",
+                enName: "Slow-Cooked Lamb Quzi",
+                category: "kurdish",
+                price: 16000,
+                rating: "5.0",
+                prepTime: "30 خولەک",
+                calories: "950 kcal",
+                badge: "VIP",
+                image: "https://images.unsplash.com/photo-1544025162-d76694265947?auto=format&fit=crop&w=700&q=85",
+                desc: "گۆشتی بەرخی نەرم و کوڵاو لەسەر برنجی بەسمەتی بە کشمیش، بادەم و شلەی فاسۆلیا."
+            },
+            {
+                id: 6,
+                name: "پیتزای مارگێریتا",
+                enName: "Classic Margherita Pizza",
+                category: "pizza",
+                price: 9500,
+                rating: "4.7",
+                prepTime: "20 خولەک",
+                calories: "720 kcal",
+                badge: "",
+                image: "https://images.unsplash.com/photo-1574071318508-1cdbab80d002?auto=format&fit=crop&w=700&q=85",
+                desc: "پەنیری مۆزارێلای تازە، گەڵای ڕێحانە، سۆسی تەماتە و زەیتی زەیتوون."
+            },
+            {
+                id: 7,
+                name: "بەرگری مریشکی کریسپی",
+                enName: "Crispy Chicken Zinger Burger",
+                category: "burger",
+                price: 7500,
+                rating: "4.7",
+                prepTime: "15 خولەک",
+                calories: "690 kcal",
+                badge: "",
+                image: "https://images.unsplash.com/photo-1615297928064-24977384d0da?auto=format&fit=crop&w=700&q=85",
+                desc: "سینگی مریشکی برژاو و کریسپی، کاهوو، تەماتە، سۆسی مایۆنیز و پەتاتە."
+            },
+            {
+                id: 8,
+                name: "پاقلاوەی فستق و کنافە",
+                enName: "Pistachio Baklava & Kunafa",
+                category: "dessert",
+                price: 6000,
+                rating: "4.9",
+                prepTime: "15 خولەک",
+                calories: "480 kcal",
+                badge: "شیرینی",
+                image: "https://images.unsplash.com/photo-1519676867240-f03562e64548?auto=format&fit=crop&w=700&q=85",
+                desc: "پاقلاوەی تازە بە فستقی عەنتابی لەگەڵ کنافەی گەرم بە پەنیر و شیلە."
+            }
+        ];
+
+        // ==================== STATE ====================
+        let cart = [
+            { id: 1, qty: 1 },
+            { id: 4, qty: 1 }
+        ];
+        let restaurantOrders = [];
+        let activeCategory = 'all';
+        let searchQuery = '';
+        let discountApplied = false;
+
+        document.addEventListener('DOMContentLoaded', () => {
+            lucide.createIcons();
+            renderMenu();
+            updateCartUI();
+            updateKitchenBadge();
+
+            document.getElementById('search-input').addEventListener('input', (e) => {
+                searchQuery = e.target.value.trim().toLowerCase();
+                renderMenu();
+            });
+        });
+
+        function formatIQD(amount) {
+            return Number(amount).toLocaleString('en-US') + ' د.ع';
+        }
+
+        // Centralized accurate price calculator so prices always update reliably everywhere
+        function calculateCartTotals() {
+            let subtotal = 0;
+            let totalItems = 0;
+
+            cart.forEach(c => {
+                const item = foodMenu.find(f => Number(f.id) === Number(c.id));
+                if (item && c.qty > 0) {
+                    subtotal += Number(item.price) * Number(c.qty);
+                    totalItems += Number(c.qty);
+                }
+            });
+
+            const delivery = totalItems > 0 ? 2000 : 0;
+            const discount = (discountApplied && totalItems > 0) ? Math.round(subtotal * 0.25) : 0;
+            const grandTotal = Math.max(0, subtotal + delivery - discount);
+
+            return { subtotal, delivery, discount, grandTotal, totalItems };
+        }
+
+        // ==================== RENDER FOOD MENU ====================
+        function setCategory(cat) {
+            activeCategory = cat;
+            document.querySelectorAll('.cat-btn').forEach(btn => {
+                if (btn.dataset.cat === cat) {
+                    btn.classList.add('bg-orange-600', 'text-white', 'font-bold', 'shadow-md');
+                    btn.classList.remove('bg-white/10', 'text-gray-200');
+                } else {
+                    btn.classList.remove('bg-orange-600', 'text-white', 'font-bold', 'shadow-md');
+                    btn.classList.add('bg-white/10', 'text-gray-200');
+                }
+            });
+            renderMenu();
+        }
+
+        function resetMenu() {
+            searchQuery = '';
+            document.getElementById('search-input').value = '';
+            setCategory('all');
+        }
+
+        function renderMenu() {
+            const grid = document.getElementById('menu-grid');
+            const filtered = foodMenu.filter(item => {
+                const matchCat = activeCategory === 'all' || item.category === activeCategory;
+                const matchSearch = searchQuery === '' ||
+                    item.name.toLowerCase().includes(searchQuery) ||
+                    item.enName.toLowerCase().includes(searchQuery) ||
+                    item.desc.toLowerCase().includes(searchQuery);
+                return matchCat && matchSearch;
+            });
+
+            document.getElementById('items-count').textContent = filtered.length;
+
+            if (filtered.length === 0) {
+                grid.innerHTML = `
+                    <div class="col-span-full py-16 text-center bg-white/5 rounded-3xl border border-white/10 space-y-2">
+                        <p class="text-base font-bold text-gray-300">هیچ خواردنێک نەدۆزرایەوە!</p>
+                        <p class="text-xs text-gray-500">تکایە ناوێکی تر بنووسە یان پۆلێنەکە بگۆڕە.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            grid.innerHTML = filtered.map(item => {
+                const inCart = cart.find(c => c.id === item.id);
+                return `
+                    <article class="food-card rounded-3xl bg-[#161922] border border-white/10 overflow-hidden shadow-xl flex flex-col justify-between">
+                        <div>
+                            <!-- Image Container -->
+                            <div class="relative h-48 w-full overflow-hidden bg-gray-800">
+                                <img src="${item.image}" alt="${item.name}" loading="lazy"
+                                     onerror="this.src='https://placehold.co/600x400/1F2937/F97316?text=KurdBite'"
+                                     class="w-full h-full object-cover transition duration-500 hover:scale-110">
+                                <div class="absolute inset-0 bg-gradient-to-t from-[#161922] via-transparent to-black/30"></div>
+                                
+                                ${item.badge ? `<span class="absolute top-3 right-3 px-2.5 py-1 rounded-full bg-orange-600 text-white text-[10px] font-extrabold shadow">${item.badge}</span>` : ''}
+                                
+                                <span class="absolute top-3 left-3 px-2 py-0.5 rounded-lg bg-black/75 backdrop-blur-md text-amber-400 text-xs font-bold flex items-center gap-1">
+                                    <i data-lucide="star" class="w-3 h-3 fill-amber-400"></i>
+                                    ${item.rating}
+                                </span>
+
+                                <span class="absolute bottom-2.5 right-3 text-[11px] text-gray-300 bg-black/60 backdrop-blur-sm px-2 py-0.5 rounded-md">
+                                    ⏱️ ${item.prepTime}
+                                </span>
+                            </div>
+
+                            <!-- Details -->
+                            <div class="p-4 space-y-1.5">
+                                <h3 class="text-base font-extrabold text-white">${item.name}</h3>
+                                <p class="text-xs text-gray-400 leading-relaxed line-clamp-2">${item.desc}</p>
+                            </div>
+                        </div>
+
+                        <!-- Price & Add Button -->
+                        <div class="px-4 pb-4 pt-2 flex items-center justify-between border-t border-white/5">
+                            <div>
+                                <span class="text-xs text-gray-400 block">نرخ</span>
+                                <span class="text-sm sm:text-base font-black text-orange-400">${formatIQD(item.price)}</span>
+                            </div>
+
+                            ${inCart ? `
+                                <div class="flex items-center gap-2 bg-orange-600/20 border border-orange-500/40 rounded-xl px-2 py-1">
+                                    <button onclick="changeQty(${item.id}, 1)" class="w-7 h-7 rounded-lg bg-orange-600 text-white font-bold flex items-center justify-center">+</button>
+                                    <span class="font-bold text-sm text-white w-5 text-center">${inCart.qty}</span>
+                                    <button onclick="changeQty(${item.id}, -1)" class="w-7 h-7 rounded-lg bg-white/10 text-white font-bold flex items-center justify-center">−</button>
+                                </div>
+                            ` : `
+                                <button onclick="addToCart(${item.id})" class="px-4 py-2.5 rounded-xl bg-orange-600 hover:bg-orange-500 text-white text-xs font-bold flex items-center gap-1.5 shadow-md transition active:scale-95">
+                                    <i data-lucide="plus" class="w-4 h-4"></i>
+                                    <span>زیادکردن</span>
+                                </button>
+                            `}
+                        </div>
+                    </article>
+                `;
+            }).join('');
+
+            lucide.createIcons();
+        }
+
+        // ==================== CART LOGIC ====================
+        function addToCart(id) {
+            const numericId = Number(id);
+            const existing = cart.find(c => Number(c.id) === numericId);
+            if (existing) {
+                existing.qty += 1;
+            } else {
+                cart.push({ id: numericId, qty: 1 });
+            }
+            const item = foodMenu.find(f => Number(f.id) === numericId);
+            const totals = calculateCartTotals();
+            showToast(`«${item.name}» زیادکرا • کۆی گشتی: ${formatIQD(totals.grandTotal)}`);
+            updateCartUI();
+            renderMenu();
+        }
+
+        function changeQty(id, delta) {
+            const numericId = Number(id);
+            const idx = cart.findIndex(c => Number(c.id) === numericId);
+            if (idx === -1) return;
+            cart[idx].qty += Number(delta);
+            if (cart[idx].qty <= 0) {
+                cart.splice(idx, 1);
+            }
+            updateCartUI();
+            renderMenu();
+        }
+
+        function applyPromoCode() {
+            const code = document.getElementById('promo-input').value.trim().toUpperCase();
+            if (code === 'KURD25' || code === 'KURDBITE') {
+                discountApplied = true;
+                showToast('🎉 کۆدی داشکاندنی ٢٥٪ چالاککرا!');
+                updateCartUI();
+            } else {
+                showToast('کۆدەکە هەڵەیە! کۆدی KURD25 بەکاربهێنە');
+            }
+        }
+
+        function updateCartUI() {
+            const { subtotal, delivery, discount, grandTotal, totalItems } = calculateCartTotals();
+
+            document.getElementById('cart-badge').textContent = totalItems;
+            const navLiveTotal = document.getElementById('navbar-live-total');
+            if (navLiveTotal) {
+                navLiveTotal.textContent = formatIQD(grandTotal);
+            }
+
+            const container = document.getElementById('cart-items-container');
+            const footer = document.getElementById('cart-footer');
+
+            if (cart.length === 0 || totalItems === 0) {
+                container.innerHTML = `
+                    <div class="h-full flex flex-col items-center justify-center text-center py-12 space-y-3">
+                        <div class="w-16 h-16 rounded-full bg-white/5 flex items-center justify-center text-gray-500">
+                            <i data-lucide="shopping-bag" class="w-8 h-8"></i>
+                        </div>
+                        <p class="text-sm font-bold text-gray-300">سەبەتەکەت بەتاڵە</p>
+                        <p class="text-xs text-gray-500">خواردنە دڵخوازەکانت لە مێنووەکە زیاد بکە.</p>
+                    </div>
+                `;
+                footer.classList.add('hidden');
+                lucide.createIcons();
+                return;
+            }
+
+            footer.classList.remove('hidden');
+
+            container.innerHTML = cart.map(c => {
+                const item = foodMenu.find(f => Number(f.id) === Number(c.id));
+                if (!item) return '';
+                const lineTotal = Number(item.price) * Number(c.qty);
+
+                return `
+                    <div class="flex items-center gap-3 p-3 rounded-2xl bg-white/5 border border-white/10">
+                        <img src="${item.image}" alt="${item.name}" class="w-16 h-16 rounded-xl object-cover flex-shrink-0">
+                        <div class="flex-1 min-w-0">
+                            <div class="flex items-center justify-between gap-2">
+                                <h4 class="text-xs sm:text-sm font-bold text-white truncate">${item.name}</h4>
+                                <span class="text-[11px] text-gray-400 flex-shrink-0">${formatIQD(item.price)} × ${c.qty}</span>
+                            </div>
+                            <span class="text-xs sm:text-sm text-orange-400 font-extrabold block mt-0.5">${formatIQD(lineTotal)}</span>
+                            <div class="flex items-center gap-2 mt-2">
+                                <button onclick="changeQty(${item.id}, 1)" class="w-7 h-7 rounded-lg bg-orange-600 hover:bg-orange-500 text-white text-xs font-bold transition">+</button>
+                                <span class="text-xs font-extrabold text-white px-1.5">${c.qty}</span>
+                                <button onclick="changeQty(${item.id}, -1)" class="w-7 h-7 rounded-lg bg-white/10 hover:bg-white/20 text-white text-xs font-bold transition">−</button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            document.getElementById('subtotal-price').textContent = formatIQD(subtotal);
+            document.getElementById('delivery-fee').textContent = formatIQD(delivery);
+
+            const discountRow = document.getElementById('discount-row');
+            if (discountApplied && discount > 0) {
+                discountRow.classList.remove('hidden');
+                document.getElementById('discount-amount').textContent = '-' + formatIQD(discount);
+            } else {
+                discountRow.classList.add('hidden');
+            }
+
+            document.getElementById('total-price').textContent = formatIQD(grandTotal);
+            lucide.createIcons();
+        }
+
+        function toggleCartDrawer(open) {
+            const drawer = document.getElementById('cart-drawer');
+            if (open) {
+                updateCartUI();
+                drawer.classList.remove('hidden');
+            } else {
+                drawer.classList.add('hidden');
+            }
+        }
+
+        // ==================== CHECKOUT & SEND ORDER TO RESTAURANT ====================
+        function openCheckoutModal() {
+            const totals = calculateCartTotals();
+            if (totals.totalItems === 0) {
+                showToast('سەرەتا خواردنێک زیاد بکە بۆ سەبەتەکەت');
+                return;
+            }
+
+            toggleCartDrawer(false);
+            const modal = document.getElementById('checkout-modal');
+            const body = document.getElementById('checkout-modal-body');
+
+            // Build items breakdown summary for checkout confirmation
+            const itemsSummaryHTML = cart.map(c => {
+                const item = foodMenu.find(f => Number(f.id) === Number(c.id));
+                if (!item) return '';
+                return `
+                    <div class="flex items-center justify-between text-xs text-gray-300">
+                        <span>${c.qty}× ${item.name}</span>
+                        <span class="font-bold text-white">${formatIQD(item.price * c.qty)}</span>
+                    </div>
+                `;
+            }).join('');
+
+            body.innerHTML = `
+                <div class="flex items-center justify-between border-b border-white/10 pb-3">
+                    <h3 class="text-lg font-extrabold text-white">ناردنی داواکاری بۆ مەتحەم</h3>
+                    <button onclick="closeCheckoutModal()" class="p-1.5 rounded-lg bg-white/10 text-gray-300"><i data-lucide="x" class="w-4 h-4"></i></button>
+                </div>
+
+                <!-- Order Items & Exact Price Summary -->
+                <div class="bg-white/5 rounded-2xl p-3.5 border border-white/10 space-y-2">
+                    <p class="text-[11px] font-bold text-gray-400">پوختەی ژەمە داواکراوەکان:</p>
+                    <div class="space-y-1 max-h-28 overflow-y-auto">${itemsSummaryHTML}</div>
+                    <div class="border-t border-white/10 pt-2 flex justify-between text-xs text-gray-400">
+                        <span>کرێی گەیاندن:</span>
+                        <span class="text-emerald-400 font-bold">${formatIQD(totals.delivery)}</span>
+                    </div>
+                    ${totals.discount > 0 ? `
+                        <div class="flex justify-between text-xs text-orange-400">
+                            <span>داشکاندن (٢٥٪):</span>
+                            <span class="font-bold">-${formatIQD(totals.discount)}</span>
+                        </div>
+                    ` : ''}
+                    <div class="flex justify-between text-sm font-black text-white pt-1">
+                        <span>کۆی گشتی کۆتایی:</span>
+                        <span class="text-orange-400">${formatIQD(totals.grandTotal)}</span>
+                    </div>
+                </div>
+
+                <form onsubmit="submitOrder(event)" class="space-y-3 text-xs sm:text-sm">
+                    <div>
+                        <label class="block text-gray-300 font-semibold mb-1">ناوی تەواو</label>
+                        <input type="text" id="cust-name" required placeholder="بۆ نموونە: ئارام ئەحمەد" class="w-full bg-white/5 border border-white/10 rounded-xl px-3.5 py-2.5 text-white focus:border-orange-500 focus:outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-gray-300 font-semibold mb-1">ژمارەی مۆبایل</label>
+                        <input type="tel" id="cust-phone" required placeholder="0770 000 0000" dir="ltr" class="w-full bg-white/5 border border-white/10 rounded-xl px-3.5 py-2.5 text-white text-right focus:border-orange-500 focus:outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-gray-300 font-semibold mb-1">ناونیشانی ورد (گەڕەک و شەقام)</label>
+                        <input type="text" id="cust-address" required placeholder="کەرکوک - گەڕەکی ڕەحیماوا / شەقامی سەرەکی" class="w-full bg-white/5 border border-white/10 rounded-xl px-3.5 py-2.5 text-white focus:border-orange-500 focus:outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-gray-300 font-semibold mb-1">تێبینی بۆ چێشتلێنەر (ئارەزوومەندانە)</label>
+                        <input type="text" id="cust-note" placeholder="بۆ نموونە: بیبەری تیژ کەم بێت یان سۆسی زیادە" class="w-full bg-white/5 border border-white/10 rounded-xl px-3.5 py-2 text-white focus:border-orange-500 focus:outline-none">
+                    </div>
+                    <button type="submit" class="w-full py-3.5 rounded-2xl bg-gradient-to-r from-orange-600 to-amber-500 hover:from-orange-500 hover:to-amber-400 text-white font-extrabold shadow-lg transition">
+                        ناردنی داواکاری بۆ مەتحەمەکە (${formatIQD(totals.grandTotal)}) 🚀
+                    </button>
+                </form>
+            `;
+
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+            lucide.createIcons();
+        }
+
+        function submitOrder(e) {
+            e.preventDefault();
+            const totals = calculateCartTotals();
+            const orderId = Math.floor(1000 + Math.random() * 9000);
+
+            const customerName = document.getElementById('cust-name').value.trim();
+            const customerPhone = document.getElementById('cust-phone').value.trim();
+            const customerAddress = document.getElementById('cust-address').value.trim();
+            const customerNote = document.getElementById('cust-note').value.trim();
+
+            // Create detailed order object and send it directly to the Restaurant Kitchen Dashboard
+            const orderItems = cart.map(c => {
+                const item = foodMenu.find(f => Number(f.id) === Number(c.id));
+                return {
+                    name: item.name,
+                    qty: c.qty,
+                    unitPrice: item.price,
+                    lineTotal: item.price * c.qty
+                };
+            });
+
+            const newOrder = {
+                id: orderId,
+                time: new Date().toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }),
+                customerName,
+                customerPhone,
+                customerAddress,
+                customerNote,
+                items: orderItems,
+                subtotal: totals.subtotal,
+                delivery: totals.delivery,
+                discount: totals.discount,
+                total: totals.grandTotal,
+                status: 'new' // 'new' | 'preparing' | 'delivering' | 'completed'
+            };
+
+            restaurantOrders.unshift(newOrder);
+            updateKitchenBadge();
+
+            // Clear cart after sending order
+            cart = [];
+            discountApplied = false;
+            updateCartUI();
+            renderMenu();
+
+            const body = document.getElementById('checkout-modal-body');
+            body.innerHTML = `
+                <div class="text-center py-4 space-y-4">
+                    <div class="w-16 h-16 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center mx-auto border border-emerald-500/40">
+                        <i data-lucide="check-circle-2" class="w-9 h-9"></i>
+                    </div>
+                    <div>
+                        <span class="px-3 py-1 rounded-full bg-white/10 text-xs font-mono text-orange-400 font-bold">ORDER #${orderId}</span>
+                        <h3 class="text-xl font-black text-white mt-2">داواکارییەکەت گەیشتە مەتحەمەکە!</h3>
+                        <p class="text-xs sm:text-sm text-gray-400 mt-1">کۆی گشتی: <strong class="text-orange-400">${formatIQD(newOrder.total)}</strong> • ستافی چێشتخانە ئێستا داواکارییەکەت دەبینن.</p>
+                    </div>
+
+                    <!-- Live Delivery Step Tracker -->
+                    <div class="bg-white/5 rounded-2xl p-4 text-right space-y-2.5 text-xs">
+                        <div class="flex items-center gap-2.5 text-emerald-400 font-bold">
+                            <span class="w-2.5 h-2.5 rounded-full bg-emerald-400"></span>
+                            <span>١. داواکاری نێردرا بۆ شاشەی مەتحەم ✓</span>
+                        </div>
+                        <div class="flex items-center gap-2.5 text-amber-400 font-bold">
+                            <span class="w-2.5 h-2.5 rounded-full bg-amber-400 animate-ping"></span>
+                            <span>٢. چاوەڕێی وەرگرتن و ئامادەکردنی چێشتلێنەر...</span>
+                        </div>
+                        <div class="flex items-center gap-2.5 text-gray-500">
+                            <span class="w-2.5 h-2.5 rounded-full bg-gray-600"></span>
+                            <span>٣. گەیاندن بۆ: ${customerAddress}</span>
+                        </div>
+                    </div>
+
+                    <div class="flex flex-col sm:flex-row gap-2.5">
+                        <button onclick="closeCheckoutModal(); toggleRestaurantPanel(true);" class="flex-1 py-3 rounded-xl bg-amber-500 hover:bg-amber-400 text-black font-extrabold text-xs sm:text-sm flex items-center justify-center gap-1.5 transition">
+                            <i data-lucide="chef-hat" class="w-4 h-4"></i>
+                            <span>بینینی داواکارییەکە لە مەتحەم</span>
+                        </button>
+                        <button onclick="closeCheckoutModal()" class="flex-1 py-3 rounded-xl bg-white/10 hover:bg-white/20 text-white font-bold text-xs sm:text-sm transition">
+                            گەڕانەوە بۆ سەرەکی
+                        </button>
+                    </div>
+                </div>
+            `;
+            lucide.createIcons();
+        }
+
+        // ==================== RESTAURANT KITCHEN PANEL LOGIC ====================
+        function updateKitchenBadge() {
+            const activeCount = restaurantOrders.filter(o => o.status !== 'completed').length;
+            const badge = document.getElementById('kitchen-orders-badge');
+            if (badge) badge.textContent = activeCount;
+        }
+
+        function toggleRestaurantPanel(open) {
+            const modal = document.getElementById('restaurant-modal');
+            if (open) {
+                renderRestaurantOrders();
+                modal.classList.remove('hidden');
+                modal.classList.add('flex');
+            } else {
+                modal.classList.add('hidden');
+                modal.classList.remove('flex');
+            }
+        }
+
+        function updateOrderStatus(orderId, newStatus) {
+            const order = restaurantOrders.find(o => o.id === orderId);
+            if (!order) return;
+            order.status = newStatus;
+            updateKitchenBadge();
+            renderRestaurantOrders();
+
+            const statusLabels = {
+                preparing: 'داواکاری وەرگیرا و دەستکرا بە ئامادەکردن 👨‍🍳',
+                delivering: 'خواردنەکە نێردرا لەگەڵ شۆفێری گەیاندن 🛵',
+                completed: 'داواکارییەکە بە سەرکەوتوویی گەیەندرا ✅'
+            };
+            showToast(statusLabels[newStatus] || 'دۆخی داواکاری نوێکرایەوە');
+        }
+
+        function renderRestaurantOrders() {
+            const container = document.getElementById('restaurant-orders-list');
+            if (restaurantOrders.length === 0) {
+                container.innerHTML = `
+                    <div class="py-16 text-center space-y-3 bg-white/5 rounded-3xl border border-dashed border-white/15">
+                        <i data-lucide="clipboard-list" class="w-12 h-12 text-gray-500 mx-auto"></i>
+                        <p class="text-base font-bold text-gray-300">هێشتا هیچ داواکارییەک نەنێردراوە بۆ مەتحەم</p>
+                        <p class="text-xs text-gray-500">کاتێک کڕیار خواردن داوا دەکات، لێرە بە تەواوی زانیارییەکانەوە دەردەکەوێت.</p>
+                    </div>
+                `;
+                lucide.createIcons();
+                return;
+            }
+
+            const statusConfig = {
+                new: { label: 'داواکاری نوێ 🔔', badgeClass: 'bg-rose-500/20 text-rose-300 border-rose-500/40' },
+                preparing: { label: 'لە ئامادەکردندایە 👨‍🍳', badgeClass: 'bg-amber-500/20 text-amber-300 border-amber-500/40' },
+                delivering: { label: 'بەڕێوەیە بۆ کڕیار 🛵', badgeClass: 'bg-sky-500/20 text-sky-300 border-sky-500/40' },
+                completed: { label: 'تەواوبوو و گەیشت ✅', badgeClass: 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40' }
+            };
+
+            container.innerHTML = restaurantOrders.map(order => {
+                const st = statusConfig[order.status] || statusConfig.new;
+                return `
+                    <div class="rounded-2xl bg-[#1A1E2B] border border-white/10 p-4 sm:p-5 space-y-4 shadow-lg">
+                        <!-- Top Row: Order ID, Customer Info & Status -->
+                        <div class="flex flex-wrap items-start justify-between gap-3 border-b border-white/10 pb-3">
+                            <div>
+                                <div class="flex items-center gap-2">
+                                    <span class="font-mono text-sm font-black text-orange-400">ORDER #${order.id}</span>
+                                    <span class="text-xs text-gray-400">• کاتژمێر ${order.time}</span>
+                                </div>
+                                <h4 class="text-sm sm:text-base font-extrabold text-white mt-1">کڕیار: ${order.customerName}</h4>
+                                <p class="text-xs text-gray-300 mt-0.5">📞 <span dir="ltr">${order.customerPhone}</span> • 📍 ${order.customerAddress}</p>
+                                ${order.customerNote ? `<p class="text-xs text-amber-300 mt-1 bg-amber-500/10 inline-block px-2.5 py-1 rounded-lg">📝 تێبینی: ${order.customerNote}</p>` : ''}
+                            </div>
+
+                            <span class="px-3 py-1 rounded-full text-xs font-bold border ${st.badgeClass}">
+                                ${st.label}
+                            </span>
+                        </div>
+
+                        <!-- Ordered Items Breakdown -->
+                        <div class="bg-black/30 rounded-xl p-3 space-y-1.5">
+                            ${order.items.map(it => `
+                                <div class="flex items-center justify-between text-xs sm:text-sm">
+                                    <span class="text-white font-semibold"><strong class="text-orange-400">${it.qty}×</strong> ${it.name}</span>
+                                    <span class="text-gray-300 font-bold">${formatIQD(it.lineTotal)}</span>
+                                </div>
+                            `).join('')}
+                            <div class="border-t border-white/10 pt-2 mt-2 flex items-center justify-between text-xs sm:text-sm font-black">
+                                <span class="text-gray-300">کۆی گشتی (لەگەڵ گەیاندن):</span>
+                                <span class="text-emerald-400 text-base">${formatIQD(order.total)}</span>
+                            </div>
+                        </div>
+
+                        <!-- Restaurant Kitchen Action Buttons -->
+                        <div class="flex flex-wrap items-center gap-2 pt-1">
+                            <button onclick="updateOrderStatus(${order.id}, 'preparing')" class="px-3.5 py-2 rounded-xl bg-amber-500/20 hover:bg-amber-500/35 text-amber-300 border border-amber-500/30 text-xs font-bold transition">
+                                👨‍🍳 وەرگرتن و ئامادەکردن
+                            </button>
+                            <button onclick="updateOrderStatus(${order.id}, 'delivering')" class="px-3.5 py-2 rounded-xl bg-sky-500/20 hover:bg-sky-500/35 text-sky-300 border border-sky-500/30 text-xs font-bold transition">
+                                🛵 ناردن لەگەڵ شۆفێر
+                            </button>
+                            <button onclick="updateOrderStatus(${order.id}, 'completed')" class="px-3.5 py-2 rounded-xl bg-emerald-500/20 hover:bg-emerald-500/35 text-emerald-300 border border-emerald-500/30 text-xs font-bold transition">
+                                ✅ گەیشت و تەواوبوو
+                            </button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            lucide.createIcons();
+        }
+
+        function closeCheckoutModal() {
+            const modal = document.getElementById('checkout-modal');
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        }
+
+        let toastTimer;
+        function showToast(msg) {
+            const toast = document.getElementById('toast');
+            document.getElementById('toast-msg').textContent = msg;
+            toast.classList.remove('translate-y-20', 'opacity-0');
+            clearTimeout(toastTimer);
+            toastTimer = setTimeout(() => {
+                toast.classList.add('translate-y-20', 'opacity-0');
+            }, 2600);
+        }
+    </script>
+</body>
+</html>
